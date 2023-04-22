@@ -43,7 +43,7 @@ namespace SaintCoinach.Cmd {
             Console.WriteLine("Game version: {0}", realm.GameVersion);
             Console.WriteLine("Definition version: {0}", realm.DefinitionVersion);
             
-            if (!realm.IsCurrentVersion) {
+            if (false) {
                 Console.Write("Update is available, perform update (Y/n)? ");
                 var updateQuery = Console.ReadLine();
                 if (string.IsNullOrEmpty(updateQuery) || string.Equals("y", updateQuery, StringComparison.OrdinalIgnoreCase)) {
