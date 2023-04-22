@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
@@ -215,13 +216,15 @@ namespace SaintCoinach {
         #region Shared
 
         private RelationDefinition ReadDefinition() {
-            var versionPath = Path.GetFullPath(Path.Combine("Definitions", "game.ver"));
+            var thisFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+            var definitionsFolder = Path.Combine(thisFolder, "Definitions");
+            var versionPath = Path.GetFullPath(Path.Combine(definitionsFolder, "game.ver"));
             if (!File.Exists(versionPath))
                 throw new InvalidOperationException($"{versionPath} must exist.");
 
             var version = File.ReadAllText(versionPath).Trim();
             var def = new RelationDefinition() { Version = version };
-            foreach (var sheetFileName in Directory.EnumerateFiles("Definitions", "*.json")) {
+            foreach (var sheetFileName in Directory.EnumerateFiles(definitionsFolder, "*.json")) {
                 var json = File.ReadAllText(Path.Combine(sheetFileName), Encoding.UTF8);
                 var obj = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(json);
                 var sheetDef = SheetDefinition.FromJson(obj);
