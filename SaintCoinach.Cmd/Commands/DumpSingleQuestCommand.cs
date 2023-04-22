@@ -13,6 +13,7 @@ using SaintCoinach;
 using SaintCoinach.Ex;
 using SaintCoinach.Text;
 using SaintCoinach.Xiv;
+using SaintCoinach.Xiv.Collections;
 
 #pragma warning disable CS1998
 
@@ -46,7 +47,13 @@ namespace SaintCoinach.Cmd.Commands {
 
             foreach (var row in textData)
             {
-                Console.WriteLine($"{row[0]}: {row[1]}");
+                var rowIdParts = ((XivString)row.GetRaw(0)).ToString().Split('_');
+                if (rowIdParts.Length != 6)
+                {
+                    continue;
+                }
+                
+                Console.WriteLine($"{rowIdParts[3]}");
             }
             
             for (int i = 0; i < 64; i++)
@@ -56,20 +63,45 @@ namespace SaintCoinach.Cmd.Commands {
                 {
                     break;
                 }
-                try
-                {
-                    var enpc = enpcs[enpcId];
-                    Console.WriteLine($"{enpcId}: {enpc.Singular}");
-                }
-                catch (Exception)
-                {
-                    var obj = objs[enpcId];
-                    Console.WriteLine($"dummy {obj.Key}");
-                }
+                Console.WriteLine(GetNpcOrObjectName(enpcs, objs, enpcId));
             }
+
+            for (int i = 0; i < 50; i++)
+            {
+                var scriptInstruction = quest.AsString("Script{Instruction}", i);
+                var scriptArg = quest.AsInt32("Script{Arg}", i);
+                var scripter = GetNpcOrObjectName(enpcs, objs, scriptArg);
+                Console.WriteLine($"{scripter}: {scriptInstruction}");
+            }
+            
             
 
             return true;
+        }
+
+        private static string GetNpcOrObjectName(ENpcCollection enpcs, IXivSheet<EObj> objs, int objOrNpcId)
+        {
+            try
+            {
+                var enpc = enpcs[objOrNpcId];
+                return ($"{objOrNpcId}: {enpc.Singular}");
+            }
+            catch (Exception)
+            {
+            }
+
+            try
+            {
+
+                var obj = objs[objOrNpcId];
+                return ($"dummy {obj.Key}");
+            }
+            catch (Exception)
+            {
+                
+            }
+
+            return "unknown id " + objOrNpcId;
         }
     }
 }
