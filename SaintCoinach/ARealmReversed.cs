@@ -215,9 +215,9 @@ namespace SaintCoinach {
         #region Shared
 
         private RelationDefinition ReadDefinition() {
-            var versionPath = Path.Combine("Definitions", "game.ver");
+            var versionPath = Path.GetFullPath(Path.Combine("Definitions", "game.ver"));
             if (!File.Exists(versionPath))
-                throw new InvalidOperationException("Definitions\\game.ver must exist.");
+                throw new InvalidOperationException($"{versionPath} must exist.");
 
             var version = File.ReadAllText(versionPath).Trim();
             var def = new RelationDefinition() { Version = version };
