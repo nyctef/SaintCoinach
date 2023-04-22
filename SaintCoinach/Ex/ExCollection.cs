@@ -110,7 +110,12 @@ namespace SaintCoinach.Ex {
 
             //name = FixName(name);
             if (!_AvailableSheets.Contains(name))
+            {
+                // foreach (var sheetName in _AvailableSheets) {
+                //     Console.Error.WriteLine(sheetName);
+                // }
                 throw new KeyNotFoundException($"Unknown sheet '{name}'");
+            }
 
             var exhPath = string.Format(ExHPathFormat, name);
             var exh = PackCollection.GetFile(exhPath);
