@@ -19,9 +19,16 @@ for definition in definitions:
     if definition.get("type") == "repeat":
         incr = int(definition["count"])
 
+    if (
+        definition.get("definition") is not None
+        and definition["definition"].get("type") == "repeat"
+    ):
+        incr *= int(definition["definition"]["count"])
+
     if index != currentIndex:
         print(
-            f"gap found around {name}: expecting to see index {currentIndex} next, but got {index} instead"
+            f"gap found around {name}: expecting to see index {currentIndex} next,"
+            f" but got {index} instead ({index-currentIndex})"
         )
         currentIndex = index + 1
     else:
