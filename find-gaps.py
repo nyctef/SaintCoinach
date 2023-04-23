@@ -14,6 +14,8 @@ currentIndex = 0
 for definition in definitions:
     index = definition.get("index", 0)
     name = definition.get("name", "<unnamed>")
+    if name is "<unnamed>" and definition.get("definition") is not None:
+        name = definition["definition"].get("name", "<unnamed>")
 
     incr = 1
     if definition.get("type") == "repeat":
