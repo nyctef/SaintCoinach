@@ -73,8 +73,17 @@ namespace SaintCoinach.Cmd.Commands {
                 var scripter = GetNpcOrObjectName(enpcs, objs, scriptArg);
                 Console.WriteLine($"{scripter}: {scriptInstruction}");
             }
-            
-            
+
+            // for (int i = 0; i < 32; i++)
+            // {
+            //     var uintA = quest.AsInt32("QuestUInt8A", i);
+            //     Console.WriteLine(uintA);
+            // }
+            // for (int i = 0; i < 32; i++)
+            // {
+            //     var uintB = quest.AsInt32("QuestUInt8B", i);
+            //     Console.WriteLine(uintB);
+            // }
 
             return true;
         }
