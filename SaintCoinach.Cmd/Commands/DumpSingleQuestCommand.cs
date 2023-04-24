@@ -63,10 +63,6 @@ namespace SaintCoinach.Cmd.Commands {
             Console.WriteLine($"{quest.Id}: {quest.Name}");
             var internalQuestIdNum = quest.Id.ToString().Split('_')[1];
 
-            _Realm.GameData.ActiveLanguage = Language.English;
-            var textDataEn = _Realm.GameData.GetSheet($"quest/{internalQuestIdNum.Substring(0, 3)}/{quest.Id}");
-            _Realm.GameData.ActiveLanguage = Language.Japanese;
-            var textDataJa = _Realm.GameData.GetSheet($"quest/{internalQuestIdNum.Substring(0, 3)}/{quest.Id}");
 
             var result = new DSQ();
             result.Key = questId;
@@ -74,10 +70,14 @@ namespace SaintCoinach.Cmd.Commands {
 
             // TODO: this would be way better with valuetuples and destructuring, ie:
             // (result.TodosEn, result.JournalEn, result.DialogEn) = CollectTextData(...)
+            _Realm.GameData.ActiveLanguage = Language.English;
+            var textDataEn = _Realm.GameData.GetSheet($"quest/{internalQuestIdNum.Substring(0, 3)}/{quest.Id}");
             var parsedEn = CollectTextData(textDataEn);
             result.TodosEn = parsedEn.Item1;
             result.JournalEn = parsedEn.Item2;
             result.DialogueEn = parsedEn.Item3;
+            _Realm.GameData.ActiveLanguage = Language.Japanese;
+            var textDataJa = _Realm.GameData.GetSheet($"quest/{internalQuestIdNum.Substring(0, 3)}/{quest.Id}");
             var parsedJa = CollectTextData(textDataJa);
             result.TodosJa = parsedJa.Item1;
             result.JournalJa = parsedJa.Item2;
@@ -158,6 +158,10 @@ namespace SaintCoinach.Cmd.Commands {
                 {
                     var speaker = rowIdParts[3];
                     dialog.Add(new DialogLine { InternalId = rowId, Speaker = speaker, Text = text});
+                }
+                else
+                {
+                    throw new Exception($"Don't know how to handle text id {rowId}");
                 }
             }
 
