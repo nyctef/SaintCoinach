@@ -31,6 +31,8 @@ namespace SaintCoinach.Cmd.Commands {
             public int Key;
             public string InternalId;
             public List<int> PreviousQuests;
+            public string NameEn;
+            public string NameJa;
             public List<int> NextQuests;
             public List<string> TodosEn;
             public List<string> JournalEn;
@@ -80,7 +82,7 @@ namespace SaintCoinach.Cmd.Commands {
                     continue;
                 }
                 _Realm.GameData.ActiveLanguage = Language.English;
-                Console.WriteLine($"{quest.Id}: {quest.Name}");
+                
                 var q = ParseQuest(quest);
                 if (nextQuestsByQuest.TryGetValue(q.Key, out var nextQuests))
                 {
@@ -100,11 +102,17 @@ namespace SaintCoinach.Cmd.Commands {
         private DSQ ParseQuest(Quest quest)
         {
             var internalQuestIdNum = quest.Id.ToString().Split('_')[1];
+            _Realm.GameData.ActiveLanguage = Language.English;
+            var nameEn = quest.Name;
+            _Realm.GameData.ActiveLanguage = Language.Japanese;
+            var nameJa = quest.Name;
 
             var result = new DSQ();
             result.Key = quest.Key;
             result.InternalId = quest.Id;
             result.PreviousQuests = quest.Requirements.PreviousQuest.PreviousQuests.Select(x => x.Key).ToList();
+            result.NameEn = nameEn;
+            result.NameJa = nameJa;
 
             // TODO: this would be way better with valuetuples and destructuring, ie:
             // (result.TodosEn, result.JournalEn, result.DialogEn) = CollectTextData(...)
@@ -175,7 +183,7 @@ namespace SaintCoinach.Cmd.Commands {
                 else
                 {
                     // throw new Exception($"Don't know how to handle text id {rowId} with value {text}");
-                    Console.WriteLine($"Don't know how to handle text id {rowId} with value {text}");
+                    // Console.WriteLine($"Don't know how to handle text id {rowId} with value {text}");
                 }
             }
 
