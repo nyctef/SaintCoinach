@@ -73,7 +73,7 @@ namespace SaintCoinach.Cmd.Commands {
                 }
             }
 
-            var result = new List<DSQ>();
+            var result = new Dictionary<int, DSQ>();
             
             foreach (var quest in quests)
             {
@@ -89,7 +89,7 @@ namespace SaintCoinach.Cmd.Commands {
                     q.NextQuests = nextQuests;
                 }
 
-                result.Add(q);
+                result.Add(q.Key, q);
             }
 
             using var writer = File.CreateText(@"c:\temp\all-quest-texts.json");
