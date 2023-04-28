@@ -74,8 +74,13 @@ namespace SaintCoinach.Cmd.Commands {
                 }
             }
 
-            var result = new Dictionary<int, DSQ>();
-            
+            try
+            {
+                Directory.Delete(@"c:\temp\all-quest-texts\", true);
+            }
+            catch (DirectoryNotFoundException) {}
+
+            Directory.CreateDirectory(@"c:\temp\all-quest-texts\");
             foreach (var quest in quests)
             {
                 if (quest.Id.IsEmpty)
@@ -90,12 +95,10 @@ namespace SaintCoinach.Cmd.Commands {
                     q.NextQuests = nextQuests;
                 }
 
-                result.Add(q.Key, q);
+                using var writer = File.CreateText($@"c:\temp\all-quest-texts\{q.Key}.json");
+                JsonSerializer.Create(new JsonSerializerSettings { Formatting = Formatting.Indented })
+                    .Serialize(writer, q);
             }
-
-            using var writer = File.CreateText(@"c:\temp\all-quest-texts.json");
-            JsonSerializer.Create(new JsonSerializerSettings { Formatting = Formatting.Indented })
-                .Serialize(writer, result);
 
             return true;
         }
@@ -113,6 +116,7 @@ namespace SaintCoinach.Cmd.Commands {
             result.Key = quest.Key;
             result.InternalId = quest.Id;
             result.PreviousQuests = quest.Requirements.PreviousQuest.PreviousQuests.Select(x => x.Key).ToList();
+            result.NextQuests = new List<int>();
             result.NameEn = nameEn;
             result.NameJa = nameJa;
 
