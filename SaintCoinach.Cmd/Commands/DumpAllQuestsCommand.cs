@@ -79,6 +79,7 @@ namespace SaintCoinach.Cmd.Commands {
                 Directory.Delete(@"c:\temp\all-quest-texts\", true);
             }
             catch (DirectoryNotFoundException) {}
+            catch (IOException) {}
 
             Directory.CreateDirectory(@"c:\temp\all-quest-texts\");
             foreach (var quest in quests)
@@ -107,6 +108,8 @@ namespace SaintCoinach.Cmd.Commands {
         {
             var internalQuestIdNum = quest.Id.ToString().Split('_')[1];
             var items = _Realm.GameData.GetSheet<Item>();
+            var eventItems = _Realm.GameData.GetSheet<EventItem>();
+            var eobjs = _Realm.GameData.GetSheet<EObj>();
             _Realm.GameData.ActiveLanguage = Language.English;
             var nameEn = quest.Name;
             _Realm.GameData.ActiveLanguage = Language.Japanese;
@@ -124,13 +127,13 @@ namespace SaintCoinach.Cmd.Commands {
             // (result.TodosEn, result.JournalEn, result.DialogEn) = CollectTextData(...)
             _Realm.GameData.ActiveLanguage = Language.English;
             var textDataEn = _Realm.GameData.GetSheet($"quest/{internalQuestIdNum.Substring(0, 3)}/{quest.Id}");
-            var parsedEn = CollectTextData(textDataEn, items);
+            var parsedEn = CollectTextData(textDataEn, items, eventItems, eobjs);
             result.TodosEn = parsedEn.Item1;
             result.JournalEn = parsedEn.Item2;
             result.DialogueEn = parsedEn.Item3;
             _Realm.GameData.ActiveLanguage = Language.Japanese;
             var textDataJa = _Realm.GameData.GetSheet($"quest/{internalQuestIdNum.Substring(0, 3)}/{quest.Id}");
-            var parsedJa = CollectTextData(textDataJa, items);
+            var parsedJa = CollectTextData(textDataJa, items, eventItems, eobjs);
             result.TodosJa = parsedJa.Item1;
             result.JournalJa = parsedJa.Item2;
             result.DialogueJa = parsedJa.Item3;
@@ -138,7 +141,7 @@ namespace SaintCoinach.Cmd.Commands {
         }
 
         private Tuple<List<string>, List<string>, List<DialogLine>> CollectTextData(IXivSheet<XivRow> textData,
-            IXivSheet<Item> items)
+            IXivSheet<Item> items, IXivSheet<EventItem> eventItems, IXivSheet<EObj> eobjs)
         {
             var todos = new List<string>();
             var journal = new List<string>();
@@ -149,7 +152,7 @@ namespace SaintCoinach.Cmd.Commands {
                 var rowId = (XivString)line[0];
                 var rowIdParts = rowId.ToString().Split('_');
                 var text = (string)(XivString)line[1];
-                text = ReplacePlaceholders(text, items);
+                text = ReplacePlaceholders(text, items, eventItems, eobjs);
                 // TODO: newer framework and list patterns
                 if (rowIdParts.Length == 5 && rowIdParts[0] == "TEXT" && rowIdParts[3] == "SEQ")
                 {
@@ -200,10 +203,11 @@ namespace SaintCoinach.Cmd.Commands {
         
         private static Regex EmphasisRegex = new Regex("<Emphasis>([^<]+)</Emphasis>", RegexOptions.Compiled);
         private static Regex IfElseRegex = new Regex(@"<If\(.+?\)>(.*?)<Else/>(.*?)</If>", RegexOptions.Compiled | RegexOptions.Singleline);
-        private static Regex SheetItemRegex = new Regex(@"<Sheet\(Item,\s*(\d+),0\)/>", RegexOptions.Compiled);
+        private static Regex SheetRegex = new Regex(@"<Sheet\((Item|EventItem|EObj),\s*(\d+),0\)/>", RegexOptions.Compiled);
         private static Regex UiGlowRegex = new Regex(@"<UIForeground>F201F4</UIForeground><UIGlow>F201F5</UIGlow>(.*?)<UIGlow>01</UIGlow><UIForeground>01</UIForeground>", RegexOptions.Compiled);
 
-        private string ReplacePlaceholders(string text, IXivSheet<Item> xivSheet)
+        private string ReplacePlaceholders(string text, IXivSheet<Item> items, IXivSheet<EventItem> eventItems,
+            IXivSheet<EObj> eobjs)
         {
             text = text
                     .Replace("<Split(<Highlight>ObjectParameter(1)</Highlight>, ,1)/>", "[Firstname]")
@@ -213,11 +217,18 @@ namespace SaintCoinach.Cmd.Commands {
                     .Replace("<If(Equal(PlayerParameter(68),10))>an <Sheet(ClassJob,PlayerParameter(68),0)/><Else/><If(Equal(PlayerParameter(68),14))>an <Sheet(ClassJob,PlayerParameter(68),0)/><Else/><If(Equal(PlayerParameter(68),5))>an <Sheet(ClassJob,PlayerParameter(68),0)/><Else/><If(Equal(PlayerParameter(68),26))>an <Sheet(ClassJob,PlayerParameter(68),0)/><Else/><If(Equal(PlayerParameter(68),33))>an <Sheet(ClassJob,PlayerParameter(68),0)/><Else/>a <Sheet(ClassJob,PlayerParameter(68),0)/></If></If></If></If></If>", "a [Crafter]")
                 ;
             text = EmphasisRegex.Replace(text, "*$1*");
-            text = SheetItemRegex.Replace(text, match =>
+            text = SheetRegex.Replace(text, match =>
             {
-                var itemId = int.Parse(match.Groups[1].Value);
-                var item = xivSheet[itemId];
-                return item.Name.ToString();
+                var sheetName = match.Groups[1].Value;
+                var itemId = int.Parse(match.Groups[2].Value);
+                return sheetName switch
+                {
+                    "Item" => items[itemId].Name.ToString(),
+                    "EventItem" => eventItems[itemId].Name.IsEmpty ? eventItems[itemId].Singular : eventItems[itemId].Name,
+                    // TODO
+                    "EObj" => $"[dummy {eobjs[itemId].Data}]",
+                    _ => throw new Exception("unrecognised sheet "+sheetName)
+                };
             });
             text = UiGlowRegex.Replace(text, "~$1~");
             // quick hack to handle nested if/else chains
