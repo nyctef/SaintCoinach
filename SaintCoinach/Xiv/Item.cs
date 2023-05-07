@@ -45,6 +45,15 @@ namespace SaintCoinach.Xiv {
         /// </summary>
         /// <value>The <see cref="ItemLevel" /> of the current item.</value>
         public ItemLevel ItemLevel { get { return As<ItemLevel>("Level{Item}"); } }
+        
+        public BaseParam[] BaseParams
+        {
+            get
+            {
+                return Enumerable.Range(0, 6).Select(x => As<BaseParam>("BaseParam", x)).Where(x => x.Key != 0)
+                    .ToArray();
+            }
+        }
 
         /// <summary>
         ///     Gets a value indicating whether the current item is unique.
